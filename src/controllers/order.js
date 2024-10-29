@@ -127,7 +127,7 @@ const createOrder = async (req, res) => {
       city: user.city,
       cover: user?.cover?.url || '',
     });
-
+   
     let htmlContent = readHTMLTemplate();
 
     htmlContent = htmlContent.replace(
@@ -159,8 +159,13 @@ const createOrder = async (req, res) => {
       service: 'gmail',
       auth: {
         user: process.env.EMAIL,
-        pass: process.env.EMAIL_PASSWORD,
+        pass: process.env.EMAIL_PASSWORD
       },
+      
+      tls: {
+        rejectUnauthorized: false
+    
+      }
     });
 
     let mailOptions = {
@@ -170,8 +175,9 @@ const createOrder = async (req, res) => {
       html: htmlContent,
     };
 
-    await transporter.sendMail(mailOptions);
 
+    await transporter.sendMail(mailOptions);
+    
     return res.status(201).json({
       success: true,
       message: 'Order Placed',
