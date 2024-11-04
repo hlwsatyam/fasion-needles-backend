@@ -1,0 +1,184 @@
+const express = require('express');
+const axios = require('axios');
+const router = express.Router();
+
+router.get('/createDelhiveryShipment', async (req, res) => {
+    const { pinCode = '132116', wayBill = 2 } = req.query;
+
+    const warehouseDataBody = {
+        name: "Fashion Needles",
+        email: "fashionneedles@gmail.com",
+        phone: "918595490062",
+        address: "First Floor, Lal Mandir Market, C-67, Main Rd, Shital Vihar, Khora Colony, Sector 57, Noida, Uttar Pradesh 201301",
+        city: "Noida",
+        country: "India",
+        pin: "201301",
+        return_address: "First Floor, Lal Mandir Market, C-67, Main Rd, Shital Vihar, Khora Colony, Sector 57, Noida, Uttar Pradesh 201301",
+        return_pin: "201301",
+        return_city: "Noida",
+        return_state: "Uttar Pradesh",
+        return_country: "India"
+    };
+    const params = {
+        md: 'E',
+        ss: 'DTO',
+        d_pin: '132116',
+        o_pin: '201301',
+        cgm: '1000',
+        pt: 'COD',
+        cod: '800'
+    };
+
+    const baseURL = 'https://track.delhivery.com';
+
+let waybill = '20342910151115'
+let ref_ids = ''
+
+    // Prepare the payload as a URL-encoded string
+    const payload = `format=json&data=${encodeURIComponent(JSON.stringify({
+        shipments: [
+            {
+                name: "Satyam Kumar",
+                add: "Karnal 23 shamgarh",
+                pin: "132116",
+                city: "Karnal",
+                state: "Haryana",
+                country: "India",
+                phone: "8059424475",
+                order: "Nevia WashFace",
+                payment_mode: "Prepaid",
+                return_pin: "",
+                return_city: "",
+                return_phone: "",
+                return_add: "",
+                return_state: "",
+                return_country: "",
+                products_desc: "New Latest Product",
+                hsn_code: "12",
+                cod_amount: "122",
+                order_date: "2022-01-05T06:30:00.000Z",
+                total_amount: "1234",
+                seller_add: "Chajaarsi",
+                seller_name: "Fashion Needles",
+                seller_inv: "",
+                quantity: "1",
+                waybill: "",
+                shipment_width: "211",
+                shipment_height: "12",
+                weight: "122",
+                seller_gst_tin: "09BSHPG4826L1ZD",
+                shipping_mode: "Surface",
+                address_type: "home"
+            }
+        ],
+        pickup_location: {
+            name: "Default Pickup Location",
+            add: "C, 67, Sector 57 Rd, Shital Vihar, Khora Road, Block C, Sector 57, Noida, Uttar Pradesh",
+            city: "Noida",
+            pin_code: "201301",
+            country: "IN",
+            phone: "9889880068"
+        }
+    }))}`;
+
+    let result = {}
+    try {
+        const PincodeServiceability = await axios.get(`${baseURL}/c/api/pin-codes/json/?filter_codes=${pinCode}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Token 03c3304cc1dcba59dbd45f35f12889fe86c33053'
+            }
+        });
+        if (PincodeServiceability.data) {
+            result = {
+                ...PincodeServiceability.data
+            }
+        }
+        // const warehouseData = await axios.post(`${baseURL}/api/backend/clientwarehouse/create/`, warehouseDataBody, {
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //         'Accept': 'application/json',
+        //         'Authorization': 'Token 03c3304cc1dcba59dbd45f35f12889fe86c33053'
+        //     }
+        // });
+        // if (warehouseData.data) {
+        //     result = {
+        //         ...result,
+        //         ...warehouseData.data
+        //     }
+        // }
+        const waybillResponse = await axios.get(`${baseURL}/waybill/api/bulk/json/?count=${wayBill}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Token 03c3304cc1dcba59dbd45f35f12889fe86c33053'
+            }
+        });
+        console.log(waybillResponse.data)
+        if (waybillResponse.data) {
+            result = {
+                ...result,
+                wayBill: waybillResponse.data
+            }
+        }
+        const invoiceChargesResponse = await axios.get(`${baseURL}/api/kinko/v1/invoice/charges/.json`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Token 03c3304cc1dcba59dbd45f35f12889fe86c33053'
+            },
+            params
+        });
+        if (invoiceChargesResponse.data) {
+            result = {
+                ...result,
+                invoiceCharges: invoiceChargesResponse.data
+            }
+        }
+
+        // const createShipment = await axios.post(`${baseURL}/api/cmu/create.json`, payload, {
+        //     headers: {
+        //         'Content-Type': 'application/x-www-form-urlencoded',
+        //         'Accept': 'application/json',
+        //         'Authorization': 'Token 03c3304cc1dcba59dbd45f35f12889fe86c33053'
+        //     }
+        // });
+        // if (createShipment.data) {
+        //     result = {
+        //         ...result,
+        //         createShipment: createShipment.data
+        //     }
+        // }
+
+
+
+        const FetchDetails = await axios.get(`${baseURL}/api/v1/packages/json/`, {
+            params: {
+                waybill,
+                ref_ids
+            },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Token 03c3304cc1dcba59dbd45f35f12889fe86c33053' // Replace with your actual token
+            }
+        });
+        if (FetchDetails.data) {
+            result = {
+                ...result,
+                FetchDetails: FetchDetails.data
+            }
+        }
+
+
+
+
+
+
+
+
+    res.status(200).json(result);
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: error?.message || 'Failed to create Delhivery shipment order' });
+    }
+});
+
+module.exports = router;

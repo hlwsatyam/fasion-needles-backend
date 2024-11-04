@@ -47,6 +47,7 @@ const OrderRoutes = require('./routes/order');
 const paymentRoutes = require('./routes/payment-intents');
 const delete_fileRoutes = require('./routes/file-delete');
 const paymentGatewayRoutes = require('./routes/paymentGatewayRoutes');
+const trackingRoutes = require('./routes/trackingRoutes');
 
 app.use('/api', homeRoutes);
 app.use('/api', authRoutes);
@@ -65,7 +66,9 @@ app.use('/api', wishlistRoutes);
 app.use('/api', OrderRoutes);
 app.use('/api', paymentRoutes);
 app.use('/api', delete_fileRoutes);
- app.use('/api',  paymentGatewayRoutes);
+app.use('/api',  paymentGatewayRoutes);
+app.use('/api',  trackingRoutes);
+
 // GET API
 app.get('/', (req, res) => {
   res.send('This is a GET API');
