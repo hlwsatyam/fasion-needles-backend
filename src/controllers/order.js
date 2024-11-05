@@ -282,6 +282,11 @@ const updateOrderByAdmin = async (req, res) => {
   try {
     const id = req.params.id;
     const data = await req.body;
+
+  
+
+
+
     const order = await Orders.findByIdAndUpdate(id, data, {
       new: true,
       runValidators: true,
