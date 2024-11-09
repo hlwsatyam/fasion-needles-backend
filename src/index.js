@@ -64,6 +64,7 @@ app.use('/api', couponCodeRoutes);
 app.use('/api', reviewRoutes);
 app.use('/api', wishlistRoutes);
 app.use('/api', OrderRoutes);
+
 app.use('/api', paymentRoutes);
 app.use('/api', delete_fileRoutes);
 app.use('/api',  paymentGatewayRoutes);

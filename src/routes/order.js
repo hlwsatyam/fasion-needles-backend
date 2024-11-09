@@ -3,9 +3,15 @@ const router = express.Router();
 const orderRoutes = require('../controllers/order');
 // Import verifyToken function
 const verifyToken = require('../config/jwt');
+const { customerPaymentStatus } = require('../config/phonepe');
 //user routes
 router.post('/orders', orderRoutes.createOrder);
+
+//Payment Status Check
+router.get('/paymentsuccess/:txnId', customerPaymentStatus);
+
 router.get('/orders/:id', orderRoutes.getOrderById);
+ 
 
 //admin routes
 router.get('/admin/orders', verifyToken, orderRoutes.getOrdersByAdmin);

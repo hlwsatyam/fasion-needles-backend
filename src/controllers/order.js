@@ -7,6 +7,7 @@ const User = require('../models/User');
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
+const {phonepeActivate} = require('../config/phonepe');
 function isExpired(expirationDate) {
   const currentDateTime = new Date();
   return currentDateTime >= new Date(expirationDate);
@@ -105,6 +106,7 @@ const createOrder = async (req, res) => {
 
     const existingUser = await User.findOne({ email: user.email });
     const orderNo = await generateOrderNumber();
+
     const orderCreated = await Orders.create({
       paymentMethod,
       paymentId,
@@ -116,9 +118,10 @@ const createOrder = async (req, res) => {
       user: existingUser ? { ...user, _id: existingUser._id } : user,
       totalItems,
       orderNo,
+      paymentStatus: paymentMethod === 'COD' ? 'done' : 'pending',
       status: 'pending',
     });
-
+    console.log(orderNo);
     await Notifications.create({
       opened: false,
       title: `${user.firstName} ${user.lastName} placed an order from ${user.city}.`,
@@ -127,7 +130,7 @@ const createOrder = async (req, res) => {
       city: user.city,
       cover: user?.cover?.url || '',
     });
-   
+
     let htmlContent = readHTMLTemplate();
 
     htmlContent = htmlContent.replace(
@@ -161,10 +164,10 @@ const createOrder = async (req, res) => {
         user: process.env.EMAIL,
         pass: process.env.EMAIL_PASSWORD
       },
-      
+
       tls: {
         rejectUnauthorized: false
-    
+
       }
     });
 
@@ -175,17 +178,24 @@ const createOrder = async (req, res) => {
       html: htmlContent,
     };
 
+    const pdata = {
+      transactionId: orderCreated._id,
+      amount: orderCreated.total,
+      number: user.phone,
+      name: `${user.firstName} ${user.lastName}`,
+      MUID: user._id,
 
-    await transporter.sendMail(mailOptions);
+    }
     
-    return res.status(201).json({
+    paymentMethod === 'COD' ? res.status(201).json({
       success: true,
       message: 'Order Placed',
       orderId: orderCreated._id,
       data: items.name,
       orderNo,
-    });
+    }) : await phonepeActivate(req, res, pdata)
   } catch (error) {
+    console.log(error);
     return res.status(400).json({ success: false, message: error.message });
   }
 };
@@ -283,7 +293,7 @@ const updateOrderByAdmin = async (req, res) => {
     const id = req.params.id;
     const data = await req.body;
 
-  
+
 
 
 

@@ -95,6 +95,7 @@ router.get('/createDelhiveryShipment', async (req, res) => {
                 ...PincodeServiceability.data
             }
         }
+    
         // const warehouseData = await axios.post(`${baseURL}/api/backend/clientwarehouse/create/`, warehouseDataBody, {
         //     headers: {
         //         'Content-Type': 'application/json',
@@ -108,6 +109,7 @@ router.get('/createDelhiveryShipment', async (req, res) => {
         //         ...warehouseData.data
         //     }
         // }
+
         const waybillResponse = await axios.get(`${baseURL}/waybill/api/bulk/json/?count=${wayBill}`, {
             headers: {
                 'Content-Type': 'application/json',
@@ -187,7 +189,36 @@ router.get('/createDelhiveryShipment', async (req, res) => {
 
 
 
+router.get('/getPackageInfo', async (req, res) => {
+    const { waybill, ref_ids } = req.query;
 
+    // Validate query parameters
+    if (!ref_ids) {
+        return res.status(400).json({ message: 'ref_ids parameter is required' });
+    }
+
+    try {
+        const response = await axios.get('https://track.delhivery.com/api/v1/packages/json/', {
+            params: {
+                waybill: waybill || '',
+                ref_ids
+            },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Token 03c3304cc1dcba59dbd45f35f12889fe86c33053' // Replace with actual token
+            }
+        });
+
+        return res.status(200).json({
+            message: 'Package information retrieved successfully',
+            data: response.data
+        });
+
+    } catch (error) {
+        console.error('Error retrieving package information:', error.response?.data || error.message);
+        res.status(500).json({ error: error.message || 'Failed to retrieve package information from Delhivery' });
+    }
+});
 
 
 
@@ -277,7 +308,7 @@ router.get('/checkDelivery/:orderID', async (req, res) => {
         res.status(500).json({ error: error?.message || 'Failed to create Delhivery shipment order' });
     }
 });
- 
+
 
 router.post('/createShipment/:orderID', async (req, res) => {
     const orderID = req.params.orderID
